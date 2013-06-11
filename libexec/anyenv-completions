@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Usage: anyenv completions <command> [arg1 arg2...]
+
+set -e
+[ -n "$ANYENV_DEBUG" ] && set -x
+
+COMMAND="$1"
+if [ -z "$COMMAND" ]; then
+  anyenv-help --usage completions >&2
+  exit 1
+fi
+
+COMMAND_PATH="$(command -v "anyenv-$COMMAND" || command -v "anyenv-sh-$COMMAND")"
+if grep -i "^\([#%]\|--\|//\) provide anyenv completions" "$COMMAND_PATH" >/dev/null; then
+  shift
+  exec "$COMMAND_PATH" --complete "$@"
+fi

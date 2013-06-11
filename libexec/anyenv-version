@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Summary: Show the current Any version and its origin
+#
+# Shows the currently selected Any version and how it was
+# selected. To obtain only the version string, use `anyenv
+# version-name'.
+
+set -e
+[ -n "$ANYENV_DEBUG" ] && set -x
+
+for env in $(anyenv-envs); do
+  echo "$env: $($env version)"
+done

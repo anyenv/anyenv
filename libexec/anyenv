@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+set -e
+export -n CDPATH
+
+if [ "$1" = "--debug" ]; then
+  export ANYENV_DEBUG=1
+  shift
+fi
+
+if [ -n "$ANYENV_DEBUG" ]; then
+  export PS4='+ [${BASH_SOURCE##*/}:${LINENO}] '
+  set -x
+fi
+
+READLINK=$(type -p greadlink readlink | head -1)
+if [ -z "$READLINK" ]; then
+  echo "anyenv: cannot find readlink - are you missing GNU coreutils?" >&2
+  exit 1
+fi
+
+resolve_link() {
+  $READLINK "$1"
+}
+
+abs_dirname() {
+  local cwd="$(pwd)"
+  local path="$1"
+
+  while [ -n "$path" ]; do
+    cd "${path%/*}"
+    local name="${path##*/}"
+    path="$(resolve_link "$name" || true)"
+  done
+
+  pwd
+  cd "$cwd"
+}
+
+if [ -z "${ANYENV_ROOT}" ]; then
+  ANYENV_ROOT="${HOME}/.anyenv"
+else
+  ANYENV_ROOT="${ANYENV_ROOT%/}"
+fi
+export ANYENV_ROOT
+
+if [ -z "${ANYENV_DIR}" ]; then
+  ANYENV_DIR="$(pwd)"
+else
+  cd "$ANYENV_DIR" 2>/dev/null || {
+    echo "anyenv: cannot change working directory to \`$ANYENV_DIR'"
+    exit 1
+  } >&2
+  ANYENV_DIR="$(pwd)"
+  cd "$OLDPWD"
+fi
+export ANYENV_DIR
+
+
+shopt -s nullglob
+
+bin_path="$(abs_dirname "$0")"
+for plugin_bin in "${ANYENV_ROOT}/plugins/"*/bin; do
+  bin_path="${bin_path}:${plugin_bin}"
+done
+export PATH="${bin_path}:${PATH}"
+
+hook_path="${ANYENV_HOOK_PATH}:${ANYENV_ROOT}/anyenv.d:/usr/local/etc/anyenv.d:/etc/anyenv.d:/usr/lib/anyenv/hooks"
+for plugin_hook in "${ANYENV_ROOT}/plugins/"*/etc/anyenv.d; do
+  hook_path="${hook_path}:${plugin_hook}"
+done
+export ANYENV_HOOK_PATH="$hook_path"
+
+shopt -u nullglob
+
+
+command="$1"
+case "$command" in
+"" | "-h" | "--help" )
+  echo -e "$(anyenv---version)\n$(anyenv-help)" >&2
+  ;;
+"-v" )
+  exec anyenv---version
+  ;;
+* )
+  command_path="$(command -v "anyenv-$command" || true)"
+  if [ -z "$command_path" ]; then
+    echo "anyenv: no such command \`$command'" >&2
+    exit 1
+  fi
+
+  shift 1
+  exec "$command_path" "$@"
+  ;;
+esac

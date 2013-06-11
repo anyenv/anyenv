@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Summary: List all Any versions available to **env
+# Usage: anyenv versions
+#
+# Lists all Any versions found in `$ANYENV_ROOT/envs/*'.
+
+set -e
+[ -n "$ANYENV_DEBUG" ] && set -x
+
+for env in $(anyenv-envs); do
+  echo "$env:"
+  echo "$($env versions)"
+done

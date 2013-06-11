@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#
+# Summary: Show the global Any version
+#
+# Show the global Any version.
+
+set -e
+[ -n "$ANYENV_DEBUG" ] && set -x
+
+for env in $(anyenv-envs); do
+  echo "$env: $($env global)"
+done

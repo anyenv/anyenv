@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Summary: Display the root directory where envs and shims are kept
+echo $ANYENV_ROOT

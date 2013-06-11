@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Summary: Relink **env commands
+
+set -e
+[ -n "$ANYENV_DEBUG" ] && set -x
+
+cd "$(anyenv-root)/bin"
+for env in $(anyenv-envs); do
+  ln -sf ../envs/${env}/bin/${env} ${env}
+done

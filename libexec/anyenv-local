@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+#
+# Summary: Show the local application-specific Any version
+#
+# Shows the local application-specific Any version by writing the
+# version name to a file named `.any-version'.
+
+set -e
+[ -n "$ANYENV_DEBUG" ] && set -x
+
+for env in $(anyenv-envs); do
+  echo "$($env local)"
+done

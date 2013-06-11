@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# Summary: Configure the shell environment for anyenv
+# Usage: eval "$(anyenv init - [<shell>])"
+
+set -e
+[ -n "$ANYENV_DEBUG" ] && set -x
+
+print=""
+no_rehash=1
+for args in "$@"
+do
+  if [ "$args" = "-" ]; then
+    print=1
+    shift
+  fi
+done
+
+shell="$1"
+if [ -z "$shell" ]; then
+  shell="$(basename "$SHELL")"
+fi
+
+READLINK=$(type -p greadlink readlink | head -1)
+if [ -z "$READLINK" ]; then
+  echo "anyenv: cannot find readlink - are you missing GNU coreutils?" >&2
+  exit 1
+fi
+
+resolve_link() {
+  $READLINK "$1"
+}
+
+abs_dirname() {
+  local cwd="$(pwd)"
+  local path="$1"
+
+  while [ -n "$path" ]; do
+    cd "${path%/*}"
+    local name="${path##*/}"
+    path="$(resolve_link "$name" || true)"
+  done
+
+  pwd
+  cd "$cwd"
+}
+
+root="$(abs_dirname "$0")/.."
+
+if [ -z "$print" ]; then
+  case "$shell" in
+  bash )
+    profile='~/.bash_profile'
+    ;;
+  zsh )
+    profile='~/.zshrc'
+    ;;
+  ksh )
+    profile='~/.profile'
+    ;;
+  * )
+    profile='your profile'
+    ;;
+  esac
+
+  { echo "# Load anyenv automatically by adding"
+    echo "# the following to ${profile}:"
+    echo
+    echo 'eval "$(anyenv init -)"'
+    echo
+  } >&2
+
+  exit 1
+fi
+
+mkdir -p "${ANYENV_ROOT}/envs"
+
+case "$shell" in
+bash | zsh )
+  echo "source \"$root/completions/anyenv.${shell}\""
+  ;;
+esac
+
+commands=(`anyenv-commands --sh`)
+IFS="|"
+cat <<EOS
+anyenv() {
+  typeset command
+  command="\$1"
+  if [ "\$#" -gt 0 ]; then
+    shift
+  fi
+
+  case "\$command" in
+  ${commands[*]})
+    eval "\`anyenv "sh-\$command" "\$@"\`";;
+  *)
+    command anyenv "\$command" "\$@";;
+  esac
+}
+EOS
+
+OLD_IFS="$IFS"
+IFS=$'\n'
+for env in $(anyenv-envs); do
+  ENV_ROOT=$(echo ${env}_ROOT | tr "[a-z]" "[A-Z]")
+  echo "export ${ENV_ROOT}=${ANYENV_ROOT}/envs/${env}"
+  export ${ENV_ROOT}=${ANYENV_ROOT}/envs/${env}
+  echo "$(${ANYENV_ROOT}/envs/${env}/bin/${env} init -)"
+done
+IFS="$OLD_IFS"
