@@ -22,7 +22,6 @@ This is a simple wrapper for [rbenv](https://github.com/sstephenson/rbenv) style
     $ git clone https://github.com/sstephenson/rbenv.git ~/.anyenv/envs/rbenv
     $ anyenv envs
     rbenv
-    $ anyenv relink
     $ exec $SHELL -l
     $ rbenv root
     /home/riywo/.anyenv/envs/rbenv

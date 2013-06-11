@@ -91,9 +91,17 @@ anyenv() {
 }
 EOS
 
+ANYENV_ADD_PATH=""
+
 for env in $(anyenv-envs); do
-  ENV_ROOT=$(echo ${env}_ROOT | tr "[a-z]" "[A-Z]")
-  echo "export ${ENV_ROOT}=${ANYENV_ROOT}/envs/${env}"
-  export ${ENV_ROOT}=${ANYENV_ROOT}/envs/${env}
-  echo "$(${ANYENV_ROOT}/envs/${env}/bin/${env} init -)"
+  ENV_ROOT_VALUE=$(echo ${env}_ROOT | tr "[a-z]" "[A-Z]")
+  ENV_ROOT="${ANYENV_ROOT}/envs/${env}"
+  ANYENV_ADD_PATH="${ENV_ROOT}/bin:${ANYENV_ADD_PATH}"
+  echo "export ${ENV_ROOT_VALUE}=\"${ENV_ROOT}\""
+
+  echo "$(${ENV_ROOT}/bin/${env} init -)"
 done
+
+if ! [ -z "$ANYENV_ADD_PATH" ]; then
+  echo "export PATH=\"${ANYENV_ADD_PATH}:\${PATH}\""
+fi
