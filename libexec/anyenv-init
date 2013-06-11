@@ -80,8 +80,6 @@ bash | zsh )
   ;;
 esac
 
-commands=(`anyenv-commands --sh`)
-IFS="|"
 cat <<EOS
 anyenv() {
   typeset command
@@ -89,22 +87,13 @@ anyenv() {
   if [ "\$#" -gt 0 ]; then
     shift
   fi
-
-  case "\$command" in
-  ${commands[*]})
-    eval "\`anyenv "sh-\$command" "\$@"\`";;
-  *)
-    command anyenv "\$command" "\$@";;
-  esac
+  command anyenv "\$command" "\$@"
 }
 EOS
 
-OLD_IFS="$IFS"
-IFS=$'\n'
 for env in $(anyenv-envs); do
   ENV_ROOT=$(echo ${env}_ROOT | tr "[a-z]" "[A-Z]")
   echo "export ${ENV_ROOT}=${ANYENV_ROOT}/envs/${env}"
   export ${ENV_ROOT}=${ANYENV_ROOT}/envs/${env}
   echo "$(${ANYENV_ROOT}/envs/${env}/bin/${env} init -)"
 done
-IFS="$OLD_IFS"
