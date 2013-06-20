@@ -98,10 +98,10 @@ for env in $(anyenv-envs); do
   ENV_ROOT="${ANYENV_ROOT}/envs/${env}"
   ANYENV_ADD_PATH="${ENV_ROOT}/bin:${ANYENV_ADD_PATH}"
   echo "export ${ENV_ROOT_VALUE}=\"${ENV_ROOT}\""
-
+  export ${ENV_ROOT_VALUE}="${ENV_ROOT}"
   echo "$(${ENV_ROOT}/bin/${env} init -)"
 done
 
 if ! [ -z "$ANYENV_ADD_PATH" ]; then
-  echo "export PATH=\"${ANYENV_ADD_PATH}:\${PATH}\""
+  echo "export PATH=\"${ANYENV_ADD_PATH}\${PATH}\""
 fi
