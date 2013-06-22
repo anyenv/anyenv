@@ -1,6 +1,6 @@
 # anyenv - all in one for \*\*env
 
-This is a simple wrapper for [rbenv](https://github.com/sstephenson/rbenv) style environment managers. You don't have to modify your shell profile for each \*\*env anymore if you install anyenv.
+This is a simple wrapper for [rbenv](https://github.com/sstephenson/rbenv) style environment managers. You don't have to git clone or modify your shell profile for each \*\*env anymore if you install anyenv.
 
 ## INSTALL
 
@@ -11,21 +11,20 @@ This is a simple wrapper for [rbenv](https://github.com/sstephenson/rbenv) style
 
 ## USAGE    
 
+    $ anyenv install rbenv
+    $ anyenv install plenv
+    $ anyenv install pyenv
+    $ anyenv install phpenv
+    $ anyenv install ndenv
+    $ exec $SEHLL -l
+    $ rbenv install 2.0.0-p195
+    …
     $ anyenv version
+    ndenv: v0.10.12 (set by /home/riywo/.anyenv/envs/ndenv/version)
     phpenv: system (set by /home/riywo/.anyenv/envs/phpenv/version)
     plenv: 5.18.0 (set by /home/riywo/.anyenv/envs/plenv/version)
     pyenv: venv27 (set by /home/riywo/.anyenv/envs/pyenv/version)
     rbenv: 1.9.3-p327 (set by /home/riywo/.anyenv/envs/rbenv/version)
-
-### ADD \*\*env
-
-    $ git clone https://github.com/sstephenson/rbenv.git ~/.anyenv/envs/rbenv
-    $ anyenv envs
-    rbenv
-    $ exec $SHELL -l
-    $ rbenv root
-    /home/riywo/.anyenv/envs/rbenv
-
 
 ## LICENSE
 
