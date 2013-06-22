@@ -1,0 +1,2 @@
+install_env "https://github.com/tokuhirom/plenv.git" "master"
+install_plugin "perl-build" "https://github.com/tokuhirom/Perl-Build.git" "master"

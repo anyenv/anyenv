@@ -1,0 +1,2 @@
+install_env "https://github.com/sstephenson/rbenv.git" "master"
+install_plugin "ruby-build" "https://github.com/sstephenson/ruby-build.git" "master"

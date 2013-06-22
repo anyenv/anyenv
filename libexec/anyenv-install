@@ -1,0 +1,209 @@
+#!/usr/bin/env bash
+#
+# Summary: Install a **env
+#
+# Usage: anyenv install [-f|--force] <**env>
+#        anyenv install -l|--list
+#
+#   -l/--list        List all available **envs
+#   -f/--force       Install even if the **env appears to be installed already
+#
+set -e
+[ -n "$ANYENV_DEBUG" ] && set -x
+
+list_definitions() {
+  { for definition in "${ANYENV_ROOT}/share/anyenv-install/"*; do
+      echo "${definition##*/}"
+    done
+  } | sort
+}
+
+install_env() {
+  local package_name="$DEFINITION"
+  local git_url="$1"
+  local git_ref="$2"
+
+  mkdir -p "$BUILD_DIR"
+  pushd "$BUILD_DIR"
+  fetch_git "${package_name}" "${git_url}" "${git_ref}"
+  popd
+
+  if [ -d "$PREFIX" ]; then
+    if [ -d "${PREFIX}/versions" ]; then
+      mv "${PREFIX}/versions" "${BUILD_DIR}/${ENV_NAME}/versions"
+    fi
+    if [ -f "${PREFIX}/version" ]; then
+      mv "${PREFIX}/version" "${BUILD_DIR}/${ENV_NAME}/version"
+    fi
+    mv "$PREFIX" "${BUILD_DIR}.prev"
+  fi
+  mv "${BUILD_DIR}/${ENV_NAME}" "$PREFIX"
+}
+
+install_plugin() {
+  local package_name="$1"
+  local git_url="$2"
+  local git_ref="$3"
+
+  mkdir -p "${PREFIX}/plugins"
+  pushd "${PREFIX}/plugins"
+  fetch_git "${package_name}" "${git_url}" "${git_ref}"
+  popd
+}
+
+fetch_git() {
+  local package_name="$1"
+  local git_url="$2"
+  local git_ref="$3"
+
+  echo "Cloning ${git_url}..."
+
+  if type git &>/dev/null; then
+    git clone --branch "$git_ref" "$git_url" "${package_name}"
+  else
+    echo "error: please install \`git\` and try again"
+    exit 1
+  fi
+}
+
+usage() {
+  # We can remove the sed fallback once rbenv 0.4.0 is widely available.
+  anyenv-help install 2>/dev/null || sed -ne '/^#/!q;s/.//;s/.//;1,4d;p' < "$0"
+  [ -z "$1" ] || exit "$1"
+}
+
+definitions() {
+  local query="$1"
+  list_definitions | grep -F "$query" || true
+}
+
+indent() {
+  sed 's/^/  /'
+}
+
+parse_options() {
+  OPTIONS=()
+  ARGUMENTS=()
+  local arg option index
+
+  for arg in "$@"; do
+    if [ "${arg:0:1}" = "-" ]; then
+      if [ "${arg:1:1}" = "-" ]; then
+        OPTIONS[${#OPTIONS[*]}]="${arg:2}"
+      else
+        index=1
+        while option="${arg:$index:1}"; do
+          [ -n "$option" ] || break
+          OPTIONS[${#OPTIONS[*]}]="$option"
+          index=$(($index+1))
+        done
+      fi
+    else
+      ARGUMENTS[${#ARGUMENTS[*]}]="$arg"
+    fi
+  done
+}
+
+
+unset FORCE
+
+# Provide anyenv completions
+if [ "$1" = "--complete" ]; then
+  list_definitions
+  exit 0
+fi
+
+if [ -z "$ANYENV_ROOT" ]; then
+  ANYENV_ROOT="${HOME}/.anyenv"
+fi
+
+parse_options "$@"
+for option in "${OPTIONS[@]}"; do
+  case "$option" in
+  "h" | "help" )
+    usage 0
+    ;;
+  "l" | "list" )
+    echo "Available **envs:"
+    definitions | indent
+    exit
+    ;;
+  "f" | "force" )
+    FORCE=true
+    ;;
+  "v" | "verbose" )
+    VERBOSE=true
+    ;;
+  * )
+    usage 1
+    ;;
+  esac
+done
+
+unset ENV_NAME
+ANYENV_ENVS_ROOT="${ANYENV_ROOT}/envs"
+
+# The first argument contains the definition to install.
+# Show usage instructions if the definition is not specified.
+DEFINITION="${ARGUMENTS[0]}"
+[ -n "$DEFINITION" ] || usage 1
+
+# Set ENV_NAME from $DEFINITION, if it is not already set. Then
+# compute the installation prefix.
+[ -n "$ENV_NAME" ] || ENV_NAME="${DEFINITION##*/}"
+PREFIX="${ANYENV_ENVS_ROOT}/${ENV_NAME}"
+
+[ -d "${PREFIX}" ] && PREFIX_EXISTS=1
+
+
+BUILTIN_DEFINITION_PATH="${ANYENV_ROOT}/share/anyenv-install/${DEFINITION}"
+if [ -e "$BUILTIN_DEFINITION_PATH" ]; then
+  DEFINITION_PATH="$BUILTIN_DEFINITION_PATH"
+else
+  echo "anyenv-install: definition not found: ${DEFINITION}"
+  exit 2
+fi
+
+# If the installation prefix exists, prompt for confirmation unless
+# the --force option was specified.
+if [ -z "$FORCE" ] && [ -d "${PREFIX}/bin" ]; then
+  echo "anyenv: $PREFIX already exists"
+  echo "Reinstallation keeps versions directries"
+  read -p "continue with installation? (y/N) "
+
+  case "$REPLY" in
+  y* | Y* ) ;;
+  * ) exit 1 ;;
+  esac
+fi
+
+# Plan cleanup on unsuccessful installation.
+cleanup() {
+  [ -z "${PREFIX_EXISTS}" ] && rm -rf "$PREFIX"
+}
+
+trap cleanup SIGINT
+
+if [ -z "$TMPDIR" ]; then
+  TMP="/tmp"
+else
+  TMP="${TMPDIR%/}"
+fi
+
+SEED="$(date "+%Y%m%d%H%M%S").$$"
+CWD="$(pwd)"
+BUILD_DIR="${TMP}/${ENV_NAME}.${SEED}"
+
+STATUS=0
+source "$DEFINITION_PATH" || STATUS="$?"
+
+if [ "$STATUS" == "0" ]; then
+  echo ""
+  echo "Install $ENV_NAME succeeded!"
+  echo "Please reload your profile (exec \$SHELL -l) or open a new session."
+else
+  echo "Install $ENV_NAME failed"
+  cleanup
+fi
+
+exit "$STATUS"
