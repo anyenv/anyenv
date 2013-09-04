@@ -17,11 +17,13 @@ This is a simple wrapper for [rbenv](https://github.com/sstephenson/rbenv) style
     $ anyenv install phpenv
     $ anyenv install ndenv
     $ anyenv install denv
+    $ anyenv install jenv
     $ exec $SEHLL -l
     $ rbenv install 2.0.0-p195
     …
     $ anyenv version
     denv: 2.063 (set by /home/riywo/.anyenv/envs/denv/version)
+    jenv: system (set by /home/riywo/.anyenv/envs/denv/version)
     ndenv: v0.10.12 (set by /home/riywo/.anyenv/envs/ndenv/version)
     phpenv: system (set by /home/riywo/.anyenv/envs/phpenv/version)
     plenv: 5.18.0 (set by /home/riywo/.anyenv/envs/plenv/version)
