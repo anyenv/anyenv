@@ -31,6 +31,11 @@ This is a simple wrapper for [rbenv](https://github.com/sstephenson/rbenv) style
     pyenv: venv27 (set by /home/riywo/.anyenv/envs/pyenv/version)
     rbenv: 1.9.3-p327 (set by /home/riywo/.anyenv/envs/rbenv/version)
 
+## PLUGINS
+
+- [znz/anyenv-update](https://github.com/znz/anyenv-update)
+- [znz/anyenv-git](https://github.com/znz/anyenv-git)
+
 ## LICENSE
 
 ### anyenv itself
