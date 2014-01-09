@@ -19,7 +19,7 @@ This is a simple wrapper for [rbenv](https://github.com/sstephenson/rbenv) style
     $ anyenv install denv
     $ anyenv install jenv
     $ anyenv install luaenv
-    $ exec $SEHLL -l
+    $ exec $SHELL -l
     …
     $ anyenv version
     denv: 2.063 (set by /home/riywo/.anyenv/envs/denv/version)
