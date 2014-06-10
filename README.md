@@ -19,6 +19,7 @@ This is a simple wrapper for [rbenv](https://github.com/sstephenson/rbenv) style
     $ anyenv install denv
     $ anyenv install jenv
     $ anyenv install luaenv
+    $ anyenv install goenv
     $ exec $SHELL -l
     …
     $ anyenv version
@@ -30,6 +31,7 @@ This is a simple wrapper for [rbenv](https://github.com/sstephenson/rbenv) style
     plenv: 5.18.0 (set by /home/riywo/.anyenv/envs/plenv/version)
     pyenv: venv27 (set by /home/riywo/.anyenv/envs/pyenv/version)
     rbenv: 1.9.3-p327 (set by /home/riywo/.anyenv/envs/rbenv/version)
+    goenv: 1.2.2
 
 ## PLUGINS
 
