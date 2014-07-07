@@ -1,1 +1,1 @@
-install_env "https://github.com/wfarr/goenv" "master"
+install_env "https://github.com/dataich/goenv.git" "master"
