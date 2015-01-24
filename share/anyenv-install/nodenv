@@ -1,0 +1,5 @@
+install_env "https://github.com/OiNutter/nodenv.git" "master"
+install_plugin "node-build" "https://github.com/OiNutter/node-build.git" "master"
+install_plugin "nodenv-default-packages" "https://github.com/nicknovitski/nodenv-default-packages.git" "master"
+install_plugin "nodenv-update" "https://github.com/charlesbjohnson/nodenv-update.git" "master"
+install_plugin "nodenv-vars" "https://github.com/OiNutter/nodenv-vars.git" "master"

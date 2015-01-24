@@ -1,0 +1,2 @@
+install_env "git://github.com/mururu/exenv.git" "master"
+install_plugin "elixir-build" "https://github.com/mururu/elixir-build.git" "master"
