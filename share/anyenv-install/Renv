@@ -1,0 +1,2 @@
+install_env "https://github.com/viking/Renv.git" "Renv"
+install_plugin "R-build" "https://github.com/viking/R-build.git" "R-build"
