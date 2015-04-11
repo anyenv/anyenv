@@ -1,0 +1,1 @@
+install_env "https://github.com/ryuone/nenv.git" "master"
