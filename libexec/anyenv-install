@@ -5,8 +5,9 @@
 # Usage: anyenv install [-f|--force] <**env>
 #        anyenv install -l|--list
 #
-#   -l/--list        List all available **envs
-#   -f/--force       Install even if the **env appears to be installed already
+#   -l/--list          List all available **envs
+#   -f/--force         Install even if the **env appears to be installed already
+#   -s/--skip-existing Skip if the version appears to be installed already
 #
 set -e
 [ -n "$ANYENV_DEBUG" ] && set -x
@@ -106,6 +107,7 @@ parse_options() {
 
 
 unset FORCE
+unset SKIP_EXISTING
 
 # Provide anyenv completions
 if [ "$1" = "--complete" ]; then
@@ -130,6 +132,9 @@ for option in "${OPTIONS[@]}"; do
     ;;
   "f" | "force" )
     FORCE=true
+    ;;
+  "s" | "skip-existing" )
+    SKIP_EXISTING=true
     ;;
   "v" | "verbose" )
     VERBOSE=true
@@ -166,15 +171,22 @@ fi
 
 # If the installation prefix exists, prompt for confirmation unless
 # the --force option was specified.
-if [ -z "$FORCE" ] && [ -d "${PREFIX}/bin" ]; then
-  echo "anyenv: $PREFIX already exists"
-  echo "Reinstallation keeps versions directries"
-  read -p "continue with installation? (y/N) "
+if [ -d "${PREFIX}/bin" ]; then
+  if [ -z "$FORCE" ] && [ -z "$SKIP_EXISTING" ]; then
+    echo "anyenv: $PREFIX already exists"
+    echo "Reinstallation keeps versions directries"
+    read -p "continue with installation? (y/N) "
 
-  case "$REPLY" in
-  y* | Y* ) ;;
-  * ) exit 1 ;;
-  esac
+    case "$REPLY" in
+    y* | Y* ) ;;
+    * ) exit 1 ;;
+    esac
+  elif [ -n "$SKIP_EXISTING" ]; then
+    # Since we know the **env version is already installed, and are opting to
+    # not force installation of existing versions, we just `exit 0` here to
+    # leave things happy
+    exit 0
+  fi
 fi
 
 # Plan cleanup on unsuccessful installation.
