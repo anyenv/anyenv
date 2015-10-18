@@ -1,2 +1,3 @@
 install_env "https://github.com/pine613/crenv.git" "master"
 install_plugin "crystal-build" "https://github.com/pine613/crystal-build.git" "master"
+install_plugin "crenv-update" "https://github.com/pine613/crenv-update.git" "master"
