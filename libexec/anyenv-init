@@ -6,11 +6,16 @@ set -e
 [ -n "$ANYENV_DEBUG" ] && set -x
 
 print=""
-no_rehash=1
+no_rehash_arg=""
 for args in "$@"
 do
   if [ "$args" = "-" ]; then
     print=1
+    shift
+  fi
+
+  if [ "$args" = "--no-rehash" ]; then
+    no_rehash_arg="--no-rehash "
     shift
   fi
 done
@@ -99,7 +104,7 @@ for env in $(anyenv-envs); do
   ANYENV_ADD_PATH="${ENV_ROOT}/bin:${ANYENV_ADD_PATH}"
   echo "export ${ENV_ROOT_VALUE}=\"${ENV_ROOT}\""
   export ${ENV_ROOT_VALUE}="${ENV_ROOT}"
-  echo "$(${ENV_ROOT}/bin/${env} init - ${shell})"
+  echo "$(${ENV_ROOT}/bin/${env} init - ${no_rehash_arg}${shell})"
 done
 
 if ! [ -z "$ANYENV_ADD_PATH" ]; then
