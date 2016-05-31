@@ -174,7 +174,7 @@ fi
 if [ -d "${PREFIX}/bin" ]; then
   if [ -z "$FORCE" ] && [ -z "$SKIP_EXISTING" ]; then
     echo "anyenv: $PREFIX already exists"
-    echo "Reinstallation keeps versions directries"
+    echo "Reinstallation keeps versions directories"
     read -p "continue with installation? (y/N) "
 
     case "$REPLY" in
