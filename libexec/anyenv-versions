@@ -9,5 +9,9 @@ set -e
 
 for env in $(anyenv-envs); do
   echo "$env:"
-  echo "$($env versions)"
+  if [ "$env" = "erlenv" ]; then
+    echo "$($env releases)"
+  else
+    echo "$($env versions)"
+  fi
 done
