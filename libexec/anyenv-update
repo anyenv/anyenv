@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 #
-# Summary: Uninstall ENVs or plugins
+# Summary: Update ENVs or plugins
 #
-# Usage: anyenv rm [-f|--force] TARGET [TARGET...]
+# Usage: anyenv u [-f|--force] [--without-plugin] [TARGET...]
 #
-#   -f/--force   Attempt to remove the specified TARGET without prompting for
-#                confirmation. If the TARGET does not exist, do not display an
-#                error message.
-#   -v/--verbose Run verbosely
+#   -f/--force       Force update
+#   -v/--verbose     Run verbosely
+#   --without-plugin Update ENVs, but not update plugin of each ENVs
 #
 # See `anyenv envs` for a complete list of installed envs.
 #
@@ -17,11 +16,13 @@ set -e
 # Provide anyenv completions
 if [ "$1" = "--complete" ]; then
   echo --force
+  echo --without-plugin
+  echo anyenv
   exec anyenv envs --bare
 fi
 
 usage() {
-  anyenv-help rm 2>/dev/null
+  anyenv-help u 2>/dev/null
   [ -z "$1" ] || exit "$1"
 }
 
@@ -46,6 +47,10 @@ parse_options () {
       ARGUMENTS[${#ARGUMENTS[*]}]="$arg"
     fi
   done
+}
+
+get_allenvs() {
+  echo "anyenv $(anyenv-envs | tr '\n' ' ')"
 }
 
 set_env_and_plugin() {
@@ -94,6 +99,10 @@ set_target_dir() {
   fi
 }
 
+print_use_forceopt() {
+  echo "Failed to update '$1'. Use 'force' option." >&2
+}
+
 target_name() {
   if [ "$ENV" = "$PLUGIN" ]; then
     echo "$ENV"
@@ -108,48 +117,66 @@ print_horizontal_separator() {
   fi
 }
 
-remove_target_dir() {
-  local should_remove
-  should_remove=
-
-  if [ -d "$TARGET_DIR" ]; then
-    if [ -z "$FORCE" ]; then
-      read -p "anyenv: Uninstall $(target_name) ? "
-      case "$REPLY" in
-      y* | Y* ) should_remove=true ;;
-      * ) should_remove= ;;
-      esac
+update_git() {
+  if [ -d "${TARGET_DIR}/.git" ]; then
+    if [ -n "$VERBOSE" ]; then
+      echo "Updating '$(target_name)'..."
     fi
 
-    if [ -n "$FORCE" ] || [ -n "$should_remove" ]; then
-      if [ -n "$VERBOSE" ]; then
-        echo "Uninstalling '$(target_name)'..."
+    # Check if current branch has tracking branch.
+    if git -C "$TARGET_DIR" rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1; then
+      if [ -n "$FORCE" ]; then
+        git -C "$TARGET_DIR" pull --force --ff --autostash
+      else
+        git -C "$TARGET_DIR" pull --force --ff-only || print_use_forceopt "$(target_name)"
       fi
-      rm -rf "$TARGET_DIR"
+    fi
+  elif [ -d "${TARGET_DIR}" ]; then
+    if [ -n "$VERBOSE" ]; then
+      echo "Skipping '$(target_name)'; not git repo"
     fi
   else
-    if [ -z "$FORCE" ]; then
-      echo "anyenv: \`$(target_name)' not installed" >&2
-    fi
+    echo "anyenv: target '$(target_name)' does not exist" >&2
   fi
 
   print_horizontal_separator
 }
 
-uninstall_target() {
+update_env() {
+  update_git
+}
+
+update_plugin() {
+  update_git
+}
+
+update_plugins() {
+  shopt -s nullglob
+  local plugin_dir env
+  plugin_dir="${TARGET_DIR}/plugins"
+  env="$ENV"
+  for plugin in $plugin_dir/*; do
+    update_target "${env}/$(basename $plugin)"
+  done
+  shopt -u nullglob
+}
+
+update_target() {
   local target
   target="$1"
 
   set_env_and_plugin "$target"
 
-  if [ "$ENV" = anyenv ] && [ "$ENV" = "$PLUGIN" ]; then
-    echo "Unable to uninstall anyenv." >&2
-    return
-  fi
-
   set_target_dir
 
-  remove_target_dir
+  if [ "$ENV" = "$PLUGIN" ]; then
+    update_env
+    if [ -z "$WITHOUT_PLUGIN" ]; then
+      update_plugins
+    fi
+  else
+    update_plugin
+  fi
 
 }
 
@@ -165,6 +192,9 @@ for option in "${OPTIONS[@]}"; do
   "v" | "verbose" )
     VERBOSE=true
     ;;
+  "without-plugin" )
+    WITHOUT_PLUGIN=true
+    ;;
   * )
     echo "no such option: ${option}" >&2
     echo
@@ -173,6 +203,11 @@ for option in "${OPTIONS[@]}"; do
   esac
 done
 
-for arg in "${ARGUMENTS[@]}"; do
-  uninstall_target "$arg"
+TARGETS=("${ARGUMENTS[@]}")
+if [ "${#ARGUMENTS[@]}" -eq 0 ]; then
+  TARGETS=($(get_allenvs))
+fi
+
+for arg in "${TARGETS[@]}"; do
+  update_target "$arg"
 done

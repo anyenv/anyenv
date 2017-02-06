@@ -1,85 +1,241 @@
 #!/usr/bin/env bash
 #
-# Summary: Install a **env
+# Summary: Install ENVs or plugins
 #
-# Usage: anyenv install [-f|--force] <**env>
-#        anyenv install -l|--list
+# Usage: anyenv i [-f|--force] TARGET[=URL][@REF] [TARGET[=URL][@REF] ...]
 #
-#   -l/--list          List all available **envs
-#   -f/--force         Install even if the **env appears to be installed already
+#   -f/--force         Install even if the target appears to be installed already
+#   -v/--verbose       Run verbosely
 #   -s/--skip-existing Skip if the version appears to be installed already
 #
 set -e
-[ -n "$ANYENV_DEBUG" ] && set -x
+[ -z "$ANYENV_DEBUG" ] || set -x
 
-list_definitions() {
-  { for definition in "${ANYENV_ROOT}/share/anyenv-install/"*; do
-      echo "${definition##*/}"
-    done
-  } | sort
-}
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"
 
-install_env() {
-  local package_name="$DEFINITION"
-  local git_url="$1"
-  local git_ref="$2"
-
-  mkdir -p "$BUILD_DIR"
-  pushd "$BUILD_DIR"
-  fetch_git "${package_name}" "${git_url}" "${git_ref}"
-  popd
-
-  if [ -d "$PREFIX" ]; then
-    if [ -d "${PREFIX}/versions" ]; then
-      mv "${PREFIX}/versions" "${BUILD_DIR}/${ENV_NAME}/versions"
-    fi
-    if [ -f "${PREFIX}/version" ]; then
-      mv "${PREFIX}/version" "${BUILD_DIR}/${ENV_NAME}/version"
-    fi
-    mv "$PREFIX" "${BUILD_DIR}.prev"
-  fi
-  mv "${BUILD_DIR}/${ENV_NAME}" "$PREFIX"
-}
-
-install_plugin() {
-  local package_name="$1"
-  local git_url="$2"
-  local git_ref="$3"
-
-  mkdir -p "${PREFIX}/plugins"
-  pushd "${PREFIX}/plugins"
-  fetch_git "${package_name}" "${git_url}" "${git_ref}"
-  popd
-}
-
-fetch_git() {
-  local package_name="$1"
-  local git_url="$2"
-  local git_ref="$3"
-
-  echo "Cloning ${git_url}..."
-
-  if type git &>/dev/null; then
-    git clone --branch "$git_ref" "$git_url" "${package_name}"
-  else
-    echo "error: please install \`git\` and try again"
-    exit 1
-  fi
-}
+# Provide anyenv completions
+if [ "$1" = "--complete" ]; then
+  echo --force
+  echo --skip-existing
+  exit
+fi
 
 usage() {
-  # We can remove the sed fallback once rbenv 0.4.0 is widely available.
-  anyenv-help install 2>/dev/null || sed -ne '/^#/!q;s/.//;s/.//;1,4d;p' < "$0"
+  anyenv-help i 2>/dev/null
   [ -z "$1" ] || exit "$1"
 }
 
-definitions() {
-  local query="$1"
-  list_definitions | grep -F "$query" || true
+set_env_and_plugin() {
+  local target
+  target="$1"
+
+  case "$target" in
+  /*-*)
+    PLUGIN="${target#/}"
+    ENV="${PLUGIN%%-*}"
+    ;;
+  /*)
+    PLUGIN="${target#/}"
+    ENV="${PLUGIN}"
+    ;;
+  */)
+    ENV="${target%/}"
+    PLUGIN="${ENV}"
+    ;;
+  */*)
+    ENV="${target%/*}"
+    PLUGIN="${target#*/}"
+    ;;
+  *-*)
+    ENV="${target%%-*}"
+    PLUGIN="${target}"
+    ;;
+  *)
+    ENV="${target}"
+    PLUGIN="${target}"
+    ;;
+  esac
 }
 
-indent() {
-  sed 's/^/  /'
+set_target_dir() {
+  if [ "$ENV" = anyenv ]; then
+    ENV_DIR="$ANYENV_ROOT"
+  else
+    ENV_DIR="${ANYENV_ROOT}/envs/${ENV}"
+  fi
+
+  if [ "$ENV" = "$PLUGIN" ]; then
+    TARGET_DIR="$ENV_DIR"
+  else
+    TARGET_DIR="${ENV_DIR}/plugins/${PLUGIN}"
+  fi
+}
+
+set_install_type() {
+  INSTALL_TYPE=install
+  if [ -d "$TARGET_DIR" ]; then
+    if [ -n "$SKIP_EXISTING" ]; then
+      INSTALL_TYPE=skip
+    elif [ -n "$FORCE" ]; then
+      INSTALL_TYPE=reinstall
+    else
+      echo "anyenv: ${TARGET_DIR} already exists"
+      echo "Reinstallation keeps versions directories"
+      read -p "continue with installation? (y/N) "
+
+      case "$REPLY" in
+      y* | Y* ) INSTALL_TYPE=reinstall ;;
+      * ) INSTALL_TYPE=skip ;;
+      esac
+    fi
+  fi
+}
+
+fetch_git() {
+  if [ -n "$GIT_REF" ]; then
+    git clone --branch "$GIT_REF" "$GIT_URL" "$BUILD_DIR"
+  else
+    git clone "$GIT_URL" "$BUILD_DIR"
+  fi
+}
+
+remove_previous_env() {
+  mv "${TARGET_DIR}/versions" "${BUILD_DIR}/versions"
+  mv "${TARGET_DIR}/version" "${BUILD_DIR}/version"
+  mv "${TARGET_DIR}" "${TARGET_DIR}.prev"
+}
+
+remove_previous_plugin() {
+  # No need to backup plugin. Just remove it.
+  rm -rf "${TARGET_DIR}"
+}
+
+remove_before_install() {
+  if [ "$ENV" = "$PLUGIN" ]; then
+    remove_previous_env
+  else
+    remove_previous_plugin
+  fi
+}
+
+target_name() {
+  if [ "$ENV" = "$PLUGIN" ]; then
+    echo "$ENV"
+  else
+    echo "${ENV}/${PLUGIN}"
+  fi
+}
+
+print_horizontal_separator() {
+  if [ -n "$VERBOSE" ]; then
+    echo
+  fi
+}
+
+install_from_git() {
+  if [ "$INSTALL_TYPE" != skip ]; then
+    if [ -n "$VERBOSE" ]; then
+      if [ -n "$GIT_REF" ]; then
+        echo "Installing '$(target_name)' from '${GIT_URL}@${GIT_REF}'..."
+      else
+        echo "Installing '$(target_name)' from '${GIT_URL}'..."
+      fi
+    fi
+
+    BUILD_ROOT="$(mktemp -d)"
+    BUILD_DIR="${BUILD_ROOT}/$PLUGIN"
+
+    fetch_git
+
+    if [ "$INSTALL_TYPE" = reinstall ]; then
+      remove_before_install
+    fi
+
+    local target_parent_dir
+    target_parent_dir="$(dirname $TARGET_DIR)"
+    [ -d "$target_parent_dir" ] || mkdir -p "$target_parent_dir"
+    mv "$BUILD_DIR" "$TARGET_DIR"
+
+    rm -rf "$BUILD_ROOT"
+
+    print_horizontal_separator
+  fi
+}
+
+read_source() {
+  local src_prefix src
+
+  SRC_URL=""
+  SRC_REF=""
+
+  for src_prefix in "${XDG_CONFIG_HOME}/anyenv/sources" "${ANYENV_ROOT}/share/anyenv/sources"; do
+    src="${src_prefix}/${ENV}/${PLUGIN}"
+    if [ -f "$src" ]; then
+      read SRC_URL SRC_REF < "$src"
+      break
+    fi
+  done
+}
+
+set_repo_url_and_ref() {
+  if [ -n "$ARG_URL" ]; then
+    GIT_URL="$ARG_URL"
+    GIT_REF="$ARG_REF"
+  elif [ -n "$ARG_REF" ]; then
+    GIT_URL="https://github.com/${ENV}/${PLUGIN}.git"
+    GIT_REF="$ARG_REF"
+  else
+    read_source
+    if [ -n "$SRC_URL" ]; then
+      GIT_URL="$SRC_URL"
+      GIT_REF="$SRC_REF"
+    else
+      GIT_URL="https://github.com/${ENV}/${PLUGIN}.git"
+      GIT_REF=""
+    fi
+  fi
+}
+
+install_target() {
+  local target
+
+  target="${1}"
+  ARG_URL="${1}"
+  ARG_REF="${1}"
+
+  target="${target%%@*}"
+  target="${target%%=*}"
+  ARG_URL="${ARG_URL%%@*}"  # remove @-part first in order to avoid the case of `a@b=c`
+  ARG_URL="${ARG_URL##*=}"
+  ARG_REF="${ARG_REF##*@}"
+
+  if [ "$ARG_URL" = "$target" ]; then
+    ARG_URL=
+  fi
+  if [ "$ARG_REF" = "$1" ]; then
+    ARG_REF=
+  fi
+
+  set_env_and_plugin "$target"
+
+  set_repo_url_and_ref
+
+  if [ "$ENV" = anyenv ] && [ "$ENV" = "$PLUGIN" ]; then
+    echo "anyenv is already installed." >&2
+    return
+  fi
+
+  set_target_dir
+
+  if [ "$ENV" != "$PLUGIN" ] && [ ! -d "$ENV_DIR" ]; then
+    echo "anyenv: unable to install \`$(target_name)'. \`${ENV}' not installed." >&2
+    return
+  fi
+
+  set_install_type
+
+  install_from_git
+
 }
 
 parse_options() {
@@ -105,32 +261,13 @@ parse_options() {
   done
 }
 
-
-unset FORCE
-unset SKIP_EXISTING
-
-# Provide anyenv completions
-if [ "$1" = "--complete" ]; then
-  list_definitions
-  exit 0
-fi
-
-if [ -z "$ANYENV_ROOT" ]; then
-  ANYENV_ROOT="${HOME}/.anyenv"
-fi
-
 parse_options "$@"
 for option in "${OPTIONS[@]}"; do
   case "$option" in
   "h" | "help" )
     usage 0
     ;;
-  "l" | "list" )
-    echo "Available **envs:"
-    definitions | indent
-    exit
-    ;;
-  "f" | "force" )
+  "f" | "force")
     FORCE=true
     ;;
   "s" | "skip-existing" )
@@ -145,77 +282,6 @@ for option in "${OPTIONS[@]}"; do
   esac
 done
 
-unset ENV_NAME
-ANYENV_ENVS_ROOT="${ANYENV_ROOT}/envs"
-
-# The first argument contains the definition to install.
-# Show usage instructions if the definition is not specified.
-DEFINITION="${ARGUMENTS[0]}"
-[ -n "$DEFINITION" ] || usage 1
-
-# Set ENV_NAME from $DEFINITION, if it is not already set. Then
-# compute the installation prefix.
-[ -n "$ENV_NAME" ] || ENV_NAME="${DEFINITION##*/}"
-PREFIX="${ANYENV_ENVS_ROOT}/${ENV_NAME}"
-
-[ -d "${PREFIX}" ] && PREFIX_EXISTS=1
-
-
-BUILTIN_DEFINITION_PATH="${ANYENV_ROOT}/share/anyenv-install/${DEFINITION}"
-if [ -e "$BUILTIN_DEFINITION_PATH" ]; then
-  DEFINITION_PATH="$BUILTIN_DEFINITION_PATH"
-else
-  echo "anyenv-install: definition not found: ${DEFINITION}"
-  exit 2
-fi
-
-# If the installation prefix exists, prompt for confirmation unless
-# the --force option was specified.
-if [ -d "${PREFIX}/bin" ]; then
-  if [ -z "$FORCE" ] && [ -z "$SKIP_EXISTING" ]; then
-    echo "anyenv: $PREFIX already exists"
-    echo "Reinstallation keeps versions directories"
-    read -p "continue with installation? (y/N) "
-
-    case "$REPLY" in
-    y* | Y* ) ;;
-    * ) exit 1 ;;
-    esac
-  elif [ -n "$SKIP_EXISTING" ]; then
-    # Since we know the **env version is already installed, and are opting to
-    # not force installation of existing versions, we just `exit 0` here to
-    # leave things happy
-    exit 0
-  fi
-fi
-
-# Plan cleanup on unsuccessful installation.
-cleanup() {
-  [ -z "${PREFIX_EXISTS}" ] && rm -rf "$PREFIX"
-}
-
-trap cleanup SIGINT
-
-if [ -z "$TMPDIR" ]; then
-  TMP="/tmp"
-else
-  TMP="${TMPDIR%/}"
-fi
-
-SEED="$(date "+%Y%m%d%H%M%S").$$"
-CWD="$(pwd)"
-BUILD_DIR="${TMP}/${ENV_NAME}.${SEED}"
-
-STATUS=0
-source "$DEFINITION_PATH" || STATUS="$?"
-
-if [ "$STATUS" == "0" ]; then
-  echo ""
-  echo "Install $ENV_NAME succeeded!"
-  echo "Please reload your profile (exec \$SHELL -l) or open a new session."
-else
-  echo "Install $ENV_NAME failed"
-  cleanup
-fi
-
-exit "$STATUS"
+for arg in "${ARGUMENTS[@]}"; do
+  install_target "$arg"
+done
