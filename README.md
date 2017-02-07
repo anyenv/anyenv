@@ -33,6 +33,77 @@ This is a simple wrapper for [rbenv](https://github.com/sstephenson/rbenv) style
     rbenv: 1.9.3-p327 (set by /home/riywo/.anyenv/envs/rbenv/version)
     goenv: 1.2.2
 
+## TARGET
+
+Anyenv installs/updates/uninstalls targets. A target can be an env or plugin.
+
+The basic form of target is `ENV/PLUGIN`, which means "PLUGIN of ENV". There is also a special case: for `ENV/ENV`, it means the ENV itself. For instance, `rbenv/rbenv` means `rbenv`, **NOT** a plugin named `rbenv`.
+
+You can also use the short form for a target by the following rules:
+
+TARGET (short form) | TARGET (full form) | ENV     | PLUGIN
+------------------- | ------------------ | ------- | -----------
+foo/bar             | foo/bar            | foo     | bar
+foo/foo-bar         | foo/foo-bar        | foo     | foo-bar
+foo/baz-bar         | foo/baz-bar        | foo     | baz-bar
+foo/foo             | foo/foo            | foo     | foo
+foo                 | foo/foo            | foo     | foo
+foo-bar             | foo/foo-bar        | foo     | foo-bar
+foo-bar-baz         | foo/foo-bar-baz    | foo     | foo-bar-baz
+foo/                | foo/foo            | foo     | foo
+/bar                | bar/bar            | bar     | bar
+/foo-bar            | foo/foo-bar        | foo     | foo-bar
+foo-bar/            | foo-bar/foo-bar    | foo-bar | foo-bar
+
+For example:
+
+TARGET (short form) | TARGET (full form) | ENV   | PLUGIN
+------------------- | ------------------ | ----- | ----------
+rbenv/rbenv-each    | rbenv/rbenv-each   | rbenv | rbenv-each
+rbenv               | rbenv/rbenv        | rbenv | rbenv
+rbenv-each          | rbenv/rbenv-each   | rbenv | rbenv-each
+rbenv/ruby-build    | rbenv/ruby-build   | rbenv | ruby-build
+ruby-build          | ruby/ruby-build    | ruby  | ruby-build
+
+Remember, `rbenv/rbenv` means the env `rbenv`, **NOT** a plugin named `rbenv`.
+
+Usage example:
+
+```
+$ anyenv install rbenv
+$ anyenv install rbenv-each
+$ anyenv install rbenv/rbenv-each
+$ anyenv install rbenv/ruby-build
+$ anyenv install rbenv rbenv-each rbenv/ruby-build
+$ anyenv update pyenv rbenv-each rbenv/ruby-build
+$ anyenv uninstall pyenv rbenv-each rbenv/ruby-build
+```
+
+### INSTALL TARGET
+
+When installing a target, anyenv will check the source url in the file `SOURCE_DIR/ENV/PLUGIN`. Anyenv will try `SOURCE_DIR` in this order:
+
+  - `$XDG_CONFIG_HOME/anyenv/sources` (default: `$HOME/.config/anyenv/sources`)
+  - `$ANYENV_ROOT/share/anyenv/sources`
+
+The source is the git url downloaded by anyenv. If you want to use a branch other than the default branch, put
+
+```
+<GIT_URL> <GIT_REF>
+```
+
+into the source file.
+
+If the source file does not exist, anyenv will try `https://github.com/ENV/PLUGIN.git` with the default branch.
+
+You can also override the url and default branch in the argument, using `TARGET[=URL][@REF]`.  For example:
+
+```
+$ anyenv install rbenv=https://github.com/foo/bar.git
+$ anyenv install rbenv@baz
+$ anyenv install rbenv=https://github.com/foo/bar.git@baz
+```
+
 ## PLUGINS
 
 - [znz/anyenv-update](https://github.com/znz/anyenv-update)
