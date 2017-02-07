@@ -1,4 +1,0 @@
-install_env "https://github.com/nodenv/nodenv.git" "master"
-install_plugin "node-build" "https://github.com/nodenv/node-build.git" "master"
-install_plugin "nodenv-default-packages" "https://github.com/nodenv/nodenv-default-packages.git" "master"
-install_plugin "nodenv-vars" "https://github.com/nodenv/nodenv-vars.git" "master"
