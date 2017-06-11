@@ -1,1 +1,1 @@
-install_env "https://github.com/mazgi/sbtenv.git" "master"
+install_env "https://github.com/sbtenv/sbtenv.git" "master"
