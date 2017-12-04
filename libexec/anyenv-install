@@ -60,7 +60,7 @@ fetch_git() {
   echo "Cloning ${git_url}..."
 
   if type git &>/dev/null; then
-    git clone --branch "$git_ref" "$git_url" "${package_name}"
+    git clone --branch "$git_ref" --depth 1 "$git_url" "${package_name}"
   else
     echo "error: please install \`git\` and try again"
     exit 1
