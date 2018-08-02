@@ -37,7 +37,7 @@ abs_dirname() {
 }
 
 if [ -z "${ANYENV_ROOT}" ]; then
-  ANYENV_ROOT="${HOME}/.anyenv"
+  ANYENV_ROOT="$(cd $(dirname $(readlink -f $0))/..; pwd)"
 else
   ANYENV_ROOT="${ANYENV_ROOT%/}"
 fi
