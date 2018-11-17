@@ -1,3 +1,3 @@
-install_env "https://github.com/madumlao/phpenv.git" "master"
+install_env "https://github.com/phpenv/phpenv.git" "master"
 install_plugin "php-build" "https://github.com/php-build/php-build.git" "master"
 install_plugin "phpenv-composer" https://github.com/ngyuki/phpenv-composer "master"
