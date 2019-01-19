@@ -8,6 +8,12 @@ This is a simple wrapper for [rbenv](https://github.com/sstephenson/rbenv) style
     $ echo 'export PATH="$HOME/.anyenv/bin:$PATH"' >> ~/.your_profile
     $ echo 'eval "$(anyenv init -)"' >> ~/.your_profile
     $ exec $SHELL -l
+for fish shell
+
+    $ git clone https://github.com/riywo/anyenv ~/.anyenv
+    $ echo 'set -x PATH $HOME/.anyenv/bin $PATH' >> ~/.config/fish/config.fish
+    $ echo 'anyenv init - fish | source' >> ~/.config/fish/config.fish
+    $ exec fish -l
 
 ## USAGE    
 
