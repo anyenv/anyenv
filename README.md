@@ -19,7 +19,7 @@ This repository will be depricated in the future. I'm currently developing a new
     $ anyenv install plenv
     $ anyenv install pyenv
     $ anyenv install phpenv
-    $ anyenv install ndenv
+    $ anyenv install nodenv
     $ anyenv install denv
     $ anyenv install jenv
     $ anyenv install luaenv
@@ -30,7 +30,7 @@ This repository will be depricated in the future. I'm currently developing a new
     denv: 2.063 (set by /home/riywo/.anyenv/envs/denv/version)
     jenv: system (set by /home/riywo/.anyenv/envs/jenv/version)
     luaenv: system (set by /home/riywo/.anyenv/envs/luaenv/version)
-    ndenv: v0.10.12 (set by /home/riywo/.anyenv/envs/ndenv/version)
+    nodenv: v0.10.12 (set by /home/riywo/.anyenv/envs/nodenv/version)
     phpenv: system (set by /home/riywo/.anyenv/envs/phpenv/version)
     plenv: 5.18.0 (set by /home/riywo/.anyenv/envs/plenv/version)
     pyenv: venv27 (set by /home/riywo/.anyenv/envs/pyenv/version)
