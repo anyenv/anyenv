@@ -1,6 +1,6 @@
 # anyenv - All in one for \*\*env
 
-This is a simple wrapper for [rbenv](https://github.com/sstephenson/rbenv) style environment managers. You don't have to git clone or modify your shell profile for each \*\*env anymore if you install anyenv.
+This is a simple wrapper for [rbenv](https://github.com/rbenv/rbenv) style environment managers. You don't have to git clone or modify your shell profile for each \*\*env anymore if you install anyenv.
 
 ## Feedback required!
 
