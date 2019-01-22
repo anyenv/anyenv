@@ -20,6 +20,8 @@ $ echo 'eval "$(anyenv init -)"' >> ~/.your_profile
 $ exec $SHELL -l
 ```
 
+See https://github.com/Homebrew/homebrew-core/pull/36257
+
 #### Manual git checkout
 
 ```
@@ -27,6 +29,14 @@ $ git clone https://github.com/anyenv/anyenv ~/.anyenv
 $ echo 'export PATH="$HOME/.anyenv/bin:$PATH"' >> ~/.your_profile
 $ echo 'eval "$(anyenv init -)"' >> ~/.your_profile
 $ exec $SHELL -l
+```
+
+#### Migration from riywo/anyenv
+
+```
+$ cd ~/.anyenv
+$ git pull
+$ git remote set-url origin https://github.com/anyenv/anyenv.git
 ```
 
 ### Initialize install manifest directory
