@@ -120,6 +120,9 @@ EOS
   ;;
 esac
 
+# Print stderr to show caveat of initialization.
+$(anyenv-install --list > /dev/null)
+
 for env in $(anyenv-envs); do
   ENV_ROOT_VALUE=$(echo ${env}_ROOT | tr "[a-z]" "[A-Z]")
   ENV_ROOT="${ANYENV_ROOT}/envs/${env}"

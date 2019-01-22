@@ -26,9 +26,14 @@ if [ -z ${ANYENV_DEFINITION_ROOT+x} ]; then
 fi
 
 list_definitions() {
-  { for definition in "${ANYENV_DEFINITION_ROOT}/"*; do
+  if [ ! -d $ANYENV_DEFINITION_ROOT ]; then
+    return
+  fi
+  { for definition in "${ANYENV_DEFINITION_ROOT}/"*env; do
       definition_name="${definition##*/}"
-      if [ "$definition_name" != "*" ] && grep -q "install_env " $definition; then
+      if [ "$definition_name" != "*" ] && \
+         grep -q "install_env " $definition
+      then
         echo "$definition_name"
       fi
     done
@@ -210,7 +215,11 @@ for option in "${OPTIONS[@]}"; do
     usage 0
     ;;
   "l" | "list" )
-    echo "Available **envs:"
+    if [ ! -d $ANYENV_DEFINITION_ROOT ]; then
+      echoe "ANYENV_DEFINITION_ROOT(${ANYENV_DEFINITION_ROOT}) doesn't exist. You can initialize it by:"
+      echoe "> anyenv install --init"
+      exit 1
+    fi
     definitions | indent
     exit
     ;;
