@@ -2,10 +2,6 @@
 
 This is a simple wrapper for [rbenv](https://github.com/sstephenson/rbenv) style environment managers. You don't have to git clone or modify your shell profile for each \*\*env anymore if you install anyenv.
 
-## DEPRICATING! Try [`anyenv/anyenv`](https://github.com/anyenv/anyenv).
-
-This repository will be depricated in the future. I'm currently developing a new repository. Please consider to try it and give me feedback.
-
 ## INSTALL
 
     $ git clone https://github.com/riywo/anyenv ~/.anyenv
