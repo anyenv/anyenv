@@ -2,31 +2,53 @@
 #
 # Summary: Install a **env
 #
-# Usage: anyenv install [-f|--force] <**env>
+# Usage: anyenv install [-f|--force] [-s/--skip-existing] <**env>
 #        anyenv install -l|--list
+#        anyenv install --init       [git-url] [git-ref]
+#        anyenv install --force-init [git-url] [git-ref]
+#        anyenv install --update
 #
 #   -l/--list          List all available **envs
 #   -f/--force         Install even if the **env appears to be installed already
 #   -s/--skip-existing Skip if the version appears to be installed already
+#   --init             Initialize install manifests with specified git repo or anyenv/anyenv-install
+#   --force-init       Initialize install manifests without confirmation
+#   --update           Update install manifests
 #
 set -e
 [ -n "$ANYENV_DEBUG" ] && set -x
 
+ANYENV_DEFAULT_MANIFEST_GIT_REPO="https://github.com/anyenv/anyenv-install.git"
+
+if [ -z ${ANYENV_DEFINITION_ROOT+x} ]; then
+  # $XDG_CONFIG_HOME/anyenv/anyenv-install or ~/.config/anyenv/anyenv-install
+  ANYENV_DEFINITION_ROOT="${XDG_CONFIG_HOME:-${HOME}/.config}/anyenv/anyenv-install"
+fi
+
 list_definitions() {
-  { for definition in "${ANYENV_ROOT}/share/anyenv-install/"*; do
-      echo "${definition##*/}"
+  { for definition in "${ANYENV_DEFINITION_ROOT}/"*; do
+      definition_name="${definition##*/}"
+      if [ "$definition_name" != "*" ] && grep -q "install_env " $definition; then
+        echo "$definition_name"
+      fi
     done
   } | sort
 }
 
 install_env() {
-  local package_name="$DEFINITION"
+  local destination="$DEFINITION"
   local git_url="$1"
   local git_ref="$2"
 
+  if [ ! -n "$git_url" ]; then
+    echoe "git_url is not specified."
+    echoe "USAGE: install_env git-url [git-ref]"
+    return 1
+  fi
+
   mkdir -p "$BUILD_DIR"
   pushd "$BUILD_DIR"
-  fetch_git "${package_name}" "${git_url}" "${git_ref}"
+  fetch_git "${destination}" "${git_url}" "${git_ref}"
   popd
 
   if [ -d "$PREFIX" ]; then
@@ -42,27 +64,33 @@ install_env() {
 }
 
 install_plugin() {
-  local package_name="$1"
+  local destination="$1"
   local git_url="$2"
   local git_ref="$3"
 
+  if [ ! -n "$destination" ] || [ ! -n "$git_url" ]; then
+    echoe "destination or git-url is not specified."
+    echoe "USAGE: install_plugin destination git-url [git-ref]"
+    return 1
+  fi
+
   mkdir -p "${PREFIX}/plugins"
   pushd "${PREFIX}/plugins"
-  fetch_git "${package_name}" "${git_url}" "${git_ref}"
+  fetch_git "${destination}" "${git_url}" "${git_ref}"
   popd
 }
 
 fetch_git() {
-  local package_name="$1"
+  local destination="$1"
   local git_url="$2"
-  local git_ref="$3"
+  local git_ref="${3:-master}"
 
-  echo "Cloning ${git_url}..."
+  echo "Cloning ${git_url} ${git_ref} to ${destination}..."
 
   if type git &>/dev/null; then
-    git clone --branch "$git_ref" "$git_url" "${package_name}"
+    git clone --branch "$git_ref" "$git_url" "$destination"
   else
-    echo "error: please install \`git\` and try again"
+    echoe "error: please install \`git\` and try again"
     exit 1
   fi
 }
@@ -76,6 +104,55 @@ usage() {
 definitions() {
   local query="$1"
   list_definitions | grep -F "$query" || true
+}
+
+echoe() {
+  local message="$1"
+  (>&2 echo -e "\e[33m${message}\e[0m")
+}
+
+initialize_manifest() {
+  git_url="${ARGUMENTS[0]:-$ANYENV_DEFAULT_MANIFEST_GIT_REPO}"
+  git_ref="${ARGUMENTS[1]}"
+  local force="$1"
+  if [ ! -d $ANYENV_DEFINITION_ROOT ]; then
+    echo "Manifest directory doesn't exist: ${ANYENV_DEFINITION_ROOT}"
+    if [ -n "$force" ]; then
+      fetch_git $ANYENV_DEFINITION_ROOT "$git_url" "$git_ref"
+    else
+      read -p "Do you want to checkout ${git_repo}? [y/N]: " answer
+      if [ "$answer" != "${answer#[Yy]}" ]; then
+        fetch_git $ANYENV_DEFINITION_ROOT "$git_url" "$git_ref"
+      else
+        echo "Canceled."
+        return 0
+      fi
+    fi
+    echo
+    echo "Completed!"
+  else
+    echoe "Manifest directory exists: ${ANYENV_DEFINITION_ROOT}"
+    return 1
+  fi
+}
+
+checkout_default_manifest() {
+  local git_repo="$1"
+  git clone $git_repo $ANYENV_DEFINITION_ROOT
+  echo
+  anyenv install --list
+}
+
+update_manifest() {
+  if [ ! -d $ANYENV_DEFINITION_ROOT ]; then
+    echo "Manifest directory doesn't exist: ${ANYENV_DEFINITION_ROOT}"
+    echo "Try anyenv install --init"
+    return 1
+  fi
+  echo "Updating manifest directory... (${ANYENV_DEFINITION_ROOT})"
+  pushd $ANYENV_DEFINITION_ROOT > /dev/null
+  git pull --no-rebase --ff
+  popd > /dev/null
 }
 
 indent() {
@@ -112,6 +189,13 @@ unset SKIP_EXISTING
 # Provide anyenv completions
 if [ "$1" = "--complete" ]; then
   list_definitions
+  echo --help
+  echo --list
+  echo --force
+  echo --skip-existing
+  echo --init
+  echo --force-init
+  echo --update
   exit 0
 fi
 
@@ -136,8 +220,17 @@ for option in "${OPTIONS[@]}"; do
   "s" | "skip-existing" )
     SKIP_EXISTING=true
     ;;
-  "v" | "verbose" )
-    VERBOSE=true
+  "init" )
+    initialize_manifest
+    exit $?
+    ;;
+  "force-init" )
+    initialize_manifest force
+    exit $?
+    ;;
+  "update" )
+    update_manifest
+    exit $?
     ;;
   * )
     usage 1
@@ -161,10 +254,8 @@ PREFIX="${ANYENV_ENVS_ROOT}/${ENV_NAME}"
 [ -d "${PREFIX}" ] && PREFIX_EXISTS=1
 
 
-BUILTIN_DEFINITION_PATH="${ANYENV_ROOT}/share/anyenv-install/${DEFINITION}"
-if [ -e "$BUILTIN_DEFINITION_PATH" ]; then
-  DEFINITION_PATH="$BUILTIN_DEFINITION_PATH"
-else
+DEFINITION_PATH="${ANYENV_DEFINITION_ROOT}/${DEFINITION}"
+if [ ! -e "$DEFINITION_PATH" ]; then
   echo "anyenv-install: definition not found: ${DEFINITION}"
   exit 2
 fi

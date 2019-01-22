@@ -1,71 +1,88 @@
-# anyenv - all in one for \*\*env
+# anyenv - All in one for \*\*env
 
 This is a simple wrapper for [rbenv](https://github.com/sstephenson/rbenv) style environment managers. You don't have to git clone or modify your shell profile for each \*\*env anymore if you install anyenv.
 
-## INSTALL
+## Feedback required!
 
-    $ git clone https://github.com/riywo/anyenv ~/.anyenv
-    $ echo 'export PATH="$HOME/.anyenv/bin:$PATH"' >> ~/.your_profile
-    $ echo 'eval "$(anyenv init -)"' >> ~/.your_profile
-    $ exec $SHELL -l
+**This repository is under development.** All feedback are welcome! See https://github.com/anyenv/anyenv/issues
 
-## USAGE    
+## Getting started
 
-    $ anyenv install rbenv
-    $ anyenv install plenv
-    $ anyenv install pyenv
-    $ anyenv install phpenv
-    $ anyenv install nodenv
-    $ anyenv install denv
-    $ anyenv install jenv
-    $ anyenv install luaenv
-    $ anyenv install goenv
-    $ exec $SHELL -l
-    …
-    $ anyenv version
-    denv: 2.063 (set by /home/riywo/.anyenv/envs/denv/version)
-    jenv: system (set by /home/riywo/.anyenv/envs/jenv/version)
-    luaenv: system (set by /home/riywo/.anyenv/envs/luaenv/version)
-    nodenv: v0.10.12 (set by /home/riywo/.anyenv/envs/nodenv/version)
-    phpenv: system (set by /home/riywo/.anyenv/envs/phpenv/version)
-    plenv: 5.18.0 (set by /home/riywo/.anyenv/envs/plenv/version)
-    pyenv: venv27 (set by /home/riywo/.anyenv/envs/pyenv/version)
-    rbenv: 1.9.3-p327 (set by /home/riywo/.anyenv/envs/rbenv/version)
-    goenv: 1.2.2
+### Install `anyenv`
 
-## PLUGINS
+#### Homebrew (for macOS user)
+Currently, `anyenv` is not supported by default, but you can use Tap:
+
+```
+$ brew tap anyenv/anyenv
+$ brew install anyenv
+$ echo 'eval "$(anyenv init -)"' >> ~/.your_profile
+$ exec $SHELL -l
+```
+
+#### Manual git checkout
+
+```
+$ git clone https://github.com/anyenv/anyenv ~/.anyenv
+$ echo 'export PATH="$HOME/.anyenv/bin:$PATH"' >> ~/.your_profile
+$ echo 'eval "$(anyenv init -)"' >> ~/.your_profile
+$ exec $SHELL -l
+```
+
+### Initialize install manifest directory
+
+If you want, you can initialize install manifest directory with [anyenv/anyenv-install](https://github.com/anyenv/anyenv-install).
+
+![anyenv install --init](https://anyenv.github.io/assets/img/demo/install-init.gif)
+
+If you have own manifest repository, you can specify it:
+
+```
+$ anyenv install --init https://github.com/foo/anyenv-install.git
+Manifest directory doesn't exist: /Users/riywo/.config/anyenv/anyenv-install
+Do you want to checkout https://github.com/foo/anyenv-install.git? [y/N]:
+```
+
+## Usage
+
+Install any **env in your manifest directory:
+
+```
+$ anyenv install rbenv
+$ anyenv install pyenv
+$ anyenv install nodenv
+$ exec $SHELL -l
+
+$ rbenv install ...
+$ pyenv install ...
+$ nodenv install ...
+```
+
+Update your manifest directory:
+
+![anyenv install --update](https://anyenv.github.io/assets/img/demo/install-update.gif)
+
+## Configuration
+
+### `ANYENV_DEFINITION_ROOT`
+This is the directory containing install manifests. Manifests should be directly under this directory:
+
+```
+$ tree ~/.config/anyenv/anyenv-install
+/Users/riywo/.config/anyenv/anyenv-install
+├── Renv
+...
+├── scalaenv
+└── swiftenv
+```
+
+If it is not defined by user, it uses fallbacks:
+
+- `${XDG_CONFIG_HOME}/anyenv/anyenv-install` if `${XDG_CONFIG_HOME}` is defined
+- `${HOME}/.config/anyenv/anyenv-install` by default
+
+## Plugins
 
 - [znz/anyenv-update](https://github.com/znz/anyenv-update)
 - [znz/anyenv-git](https://github.com/znz/anyenv-git)
-
-## LICENSE
-
-### anyenv itself
-
-(The MIT license)
-
-Copyright (c) 2013 Ryosuke IWANAGA
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-### rbenv
-
-anyenv uses rbenv code
-
-    (The MIT license)
-
-    Copyright (c) 2013 Sam Stephenson
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/riywo/anyenv/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 
