@@ -1,2 +1,0 @@
-install_env "https://github.com/cehoffman/luaenv.git" "master"
-install_plugin "lua-build" "https://github.com/cehoffman/lua-build" "master"

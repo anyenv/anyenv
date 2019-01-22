@@ -1,2 +1,0 @@
-install_env "https://github.com/riywo/ndenv.git" "master"
-install_plugin "node-build" "https://github.com/riywo/node-build.git" "master"
