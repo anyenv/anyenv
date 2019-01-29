@@ -11,10 +11,8 @@ This is a simple wrapper for [rbenv](https://github.com/rbenv/rbenv) style envir
 ### Install `anyenv`
 
 #### Homebrew (for macOS user)
-Currently, `anyenv` is not supported by default, but you can use Tap:
 
 ```
-$ brew tap anyenv/anyenv
 $ brew install anyenv
 $ echo 'eval "$(anyenv init -)"' >> ~/.your_profile
 $ exec $SHELL -l
