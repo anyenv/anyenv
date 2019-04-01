@@ -8,36 +8,77 @@ This is a simple wrapper for [rbenv](https://github.com/rbenv/rbenv) style envir
 
 ## Getting started
 
-### Install `anyenv`
+### 1. Install and configure `anyenv`
 
 #### Homebrew (for macOS user)
+1. Install anyenv
 
-```
-$ brew install anyenv
-$ echo 'eval "$(anyenv init -)"' >> ~/.your_profile
-$ exec $SHELL -l
-```
+  ```
+  $ brew install anyenv
+  ```
 
-See https://github.com/Homebrew/homebrew-core/pull/36257
+2. Set up anyenv in your shell.
+
+  ```
+  $ anyenv init
+  ```
+  
+  Follow the printed instructions.
+
+3. Close your Terminal window and open a new one so your changes take effect.
+
+  You'll see a warning if you don't have manifest directory.
+  
+  ```
+  ANYENV_DEFINITION_ROOT(/Users/riywo/.config/anyenv/anyenv-install) doesn't exist. You can initialize it by:
+  > anyenv install --init
+  ```
 
 #### Manual git checkout
+1. Clone anyenv into `~/.anyenv`.
 
-```
-$ git clone https://github.com/anyenv/anyenv ~/.anyenv
-$ echo 'export PATH="$HOME/.anyenv/bin:$PATH"' >> ~/.your_profile
-$ echo 'eval "$(anyenv init -)"' >> ~/.your_profile
-$ exec $SHELL -l
-```
+  ```
+  $ git clone https://github.com/anyenv/anyenv ~/.anyenv
+  ```
+    
+2. Add `~/.anyenv/bin` to your `$PATH` for access to the `anyenv` command-line utility.
+   * For **bash**:
+     ```
+     $ echo 'export PATH="$HOME/.anyenv/bin:$PATH"' >> ~/.bash_profile
+     ```
+     
+   * For **Ubuntu Desktop**:
+     ```
+     $ echo 'export PATH="$HOME/.anyenv/bin:$PATH"' >> ~/.bashrc
+     ```
+     
+   * For **Zsh**:
+     ```
+     $ echo 'export PATH="$HOME/.anyenv/bin:$PATH"' >> ~/.zshrc
+     ```
+   
+   * For **Fish shell**:
+     ```
+     $ set -Ux fish_user_paths $HOME/.anyenv/bin $fish_user_paths
+     ```
+3. Set up anyenv in your shell.
 
-#### Migration from riywo/anyenv
+  ```
+  $ ~/.anyenv/bin/anyenv init
+  ```
+  
+  Follow the printed instructions.
 
-```
-$ cd ~/.anyenv
-$ git pull
-$ git remote set-url origin https://github.com/anyenv/anyenv.git
-```
+4. Close your Terminal window and open a new one so your changes take effect.
 
-### Initialize install manifest directory
+  You'll see a warning if you don't have manifest directory.
+  
+  ```
+  ANYENV_DEFINITION_ROOT(/Users/riywo/.config/anyenv/anyenv-install) doesn't exist. You can initialize it by:
+  > anyenv install --init
+  ```
+
+### 2. Initialize install manifest directory
 
 If you want, you can initialize install manifest directory with [anyenv/anyenv-install](https://github.com/anyenv/anyenv-install).
 
