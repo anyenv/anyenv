@@ -113,7 +113,7 @@ definitions() {
 
 echoe() {
   local message="$1"
-  (>&2 echo -e "\e[33m${message}\e[0m")
+  (>&2 printf "\e[33m%s\e[0m\n" "${message}")
 }
 
 initialize_manifest() {
