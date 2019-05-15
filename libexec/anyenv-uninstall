@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Summary: Uninstall a specific **anv
+# Summary: Uninstall a specific **env
 #
 # Usage: anyenv uninstall [-f|--force] <**env>
 #
