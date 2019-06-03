@@ -26,8 +26,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2019-01-21
 - Initial release
 
+### Added (since repository changed)
+- [ANYENV_DEFINITION_ROOT](https://github.com/anyenv/anyenv#anyenv_definition_root)
+
+### Changed (since repository changed)
+- Bundled envs are removed and separeted to [anyenv/anyenv-install](https://github.com/anyenv/anyenv-install)
+  - If you upgrade anyenv from order version, you need to install manifest. More details are [here](https://github.com/anyenv/anyenv#2-initialize-install-manifest-directory)
+
 [Unreleased]: https://github.com/anyenv/anyenv/compare/v1.1.0...HEAD
 [1.1.0]: https://github.com/anyenv/anyenv/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/anyenv/anyenv/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/anyenv/anyenv/releases/tag/v1.0.0
-
