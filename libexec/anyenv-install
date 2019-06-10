@@ -65,6 +65,7 @@ install_env() {
     fi
     mv "$PREFIX" "${BUILD_DIR}.prev"
   fi
+  mkdir -p "$ANYENV_ENVS_ROOT"
   mv "${BUILD_DIR}/${ENV_NAME}" "$PREFIX"
 }
 
