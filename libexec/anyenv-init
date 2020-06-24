@@ -129,9 +129,9 @@ for env in $(anyenv-envs); do
 
   case "$shell" in
   fish )
-    echo "set -x ${ENV_ROOT_VALUE} \"${ENV_ROOT}\""
+    echo "set -gx ${ENV_ROOT_VALUE} \"${ENV_ROOT}\""
     export ${ENV_ROOT_VALUE}="${ENV_ROOT}"
-    echo "set -x PATH \$PATH \"${ENV_ROOT}/bin\""
+    echo "set -gx PATH \$PATH \"${ENV_ROOT}/bin\""
     ;;
   * )
     echo "export ${ENV_ROOT_VALUE}=\"${ENV_ROOT}\""
