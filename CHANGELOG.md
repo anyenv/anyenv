@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2020-08-14
+### Fixed
+- Fix tfenv issue while `anyenv init`
+- Fix fish variable exporting to global scope
+
 ## [1.1.1] - 2019-06-10
 ### Fixed
 - Fix `anyenv install` issue with Homebrew installation due to no `ANYENV_ENVS_ROOT`
@@ -37,7 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bundled envs are removed and separeted to [anyenv/anyenv-install](https://github.com/anyenv/anyenv-install)
   - If you upgrade anyenv from order version, you need to install manifest. More details are [here](https://github.com/anyenv/anyenv#2-initialize-install-manifest-directory)
 
-[Unreleased]: https://github.com/anyenv/anyenv/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/anyenv/anyenv/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/anyenv/anyenv/compare/v1.1.1...v1.1.2
+[1.1.1]: https://github.com/anyenv/anyenv/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/anyenv/anyenv/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/anyenv/anyenv/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/anyenv/anyenv/releases/tag/v1.0.0
