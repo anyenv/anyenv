@@ -140,5 +140,7 @@ for env in $(anyenv-envs); do
     ;;
   esac
 
-  echo "$(${ENV_ROOT}/bin/${env} init - ${no_rehash_arg}${shell})"
+  if { ${ENV_ROOT}/bin/${env} commands | grep -q '^init$' ; } 2> /dev/null  ; then
+    echo "$(${ENV_ROOT}/bin/${env} init - ${no_rehash_arg}${shell})"
+  fi
 done
