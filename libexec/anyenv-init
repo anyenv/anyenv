@@ -141,6 +141,18 @@ for env in $(anyenv-envs); do
   esac
 
   if { ${ENV_ROOT}/bin/${env} commands | grep -q '^init$' ; } 2> /dev/null  ; then
-    echo "$(${ENV_ROOT}/bin/${env} init - ${no_rehash_arg}${shell})"
+    case "$env" in
+      pyenv )
+        pyenv_major_version=$(${ENV_ROOT}/bin/${env} --version | cut -d' ' -f2 | cut -d. -f1)
+        if [ $pyenv_major_version -ge 2 ]; then
+          echo "$(${ENV_ROOT}/bin/${env} init --path ${no_rehash_arg}${shell})"
+        else
+          echo "$(${ENV_ROOT}/bin/${env} init - ${no_rehash_arg}${shell})"
+        fi
+        ;;
+      * )
+        echo "$(${ENV_ROOT}/bin/${env} init - ${no_rehash_arg}${shell})"
+        ;;
+    esac
   fi
 done
