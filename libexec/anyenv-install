@@ -126,7 +126,7 @@ initialize_manifest() {
     if [ -n "$force" ]; then
       fetch_git $ANYENV_DEFINITION_ROOT "$git_url" "$git_ref"
     else
-      read -p "Do you want to checkout ${git_repo}? [y/N]: " answer
+      read -p "Do you want to checkout ${git_url}? [y/N]: " answer
       if [ "$answer" != "${answer#[Yy]}" ]; then
         fetch_git $ANYENV_DEFINITION_ROOT "$git_url" "$git_ref"
       else
