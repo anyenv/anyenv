@@ -49,6 +49,10 @@ abs_dirname() {
   cd "$cwd"
 }
 
+env_major_version() {
+  cut -d' ' -f2 | cut -d. -f1
+}
+
 root="$(abs_dirname "$0")/.."
 
 if [ -z "$print" ]; then
@@ -141,6 +145,15 @@ for env in $(anyenv-envs); do
   esac
 
   if { ${ENV_ROOT}/bin/${env} commands | grep -q '^init$' ; } 2> /dev/null  ; then
+  case ${env} in
+    pyenv )
+      if [ $(${ENV_ROOT}/bin/${env} --version | env_major_version) -ge 2 ]; then
+        echo "$(${ENV_ROOT}/bin/${env} init --path)" # pyenv 2 requires explicit path setting.
+        # To suppress warning, path should be set in this shell context as well.
+        eval "$(${ENV_ROOT}/bin/${env} init --path)"
+      fi
+      ;;
+  esac
     echo "$(${ENV_ROOT}/bin/${env} init - ${no_rehash_arg}${shell})"
   fi
 done
