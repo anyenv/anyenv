@@ -148,9 +148,9 @@ for env in $(anyenv-envs); do
   case ${env} in
     pyenv )
       if [ $(${ENV_ROOT}/bin/${env} --version | env_major_version) -ge 2 ]; then
-        echo "$(${ENV_ROOT}/bin/${env} init --path)" # pyenv 2 requires explicit path setting.
+        echo "$(${ENV_ROOT}/bin/${env} init --path ${shell})" # pyenv 2 requires explicit path setting.
         # To suppress warning, path should be set in this shell context as well.
-        eval "$(${ENV_ROOT}/bin/${env} init --path)"
+        eval "$(${ENV_ROOT}/bin/${env} init --path $(basename $0))"
       fi
       ;;
   esac
