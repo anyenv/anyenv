@@ -6,7 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.4] - 2021-07-19
+### Fixed
+- Fix startup error in fish shell [#93](https://github.com/anyenv/anyenv/pull/93)
+
 ## [1.1.3] - 2021-06-12
+### Fixed
 - Fixed a variable name [#75](https://github.com/anyenv/anyenv/pull/75)
 - Run `pyenv init --path` for pyenv 2 [#92](https://github.com/anyenv/anyenv/pull/92)
 
@@ -46,7 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bundled envs are removed and separeted to [anyenv/anyenv-install](https://github.com/anyenv/anyenv-install)
   - If you upgrade anyenv from order version, you need to install manifest. More details are [here](https://github.com/anyenv/anyenv#2-initialize-install-manifest-directory)
 
-[Unreleased]: https://github.com/anyenv/anyenv/compare/v1.1.3...HEAD
+[Unreleased]: https://github.com/anyenv/anyenv/compare/v1.1.4...HEAD
+[1.1.4]: https://github.com/anyenv/anyenv/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/anyenv/anyenv/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/anyenv/anyenv/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/anyenv/anyenv/compare/v1.1.0...v1.1.1
