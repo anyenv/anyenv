@@ -9,5 +9,9 @@ set -e
 [ -n "$ANYENV_DEBUG" ] && set -x
 
 for env in $(anyenv-envs); do
-  echo "$env: $($env version)"
+  if [ "$env" = "tfenv" ]; then
+    echo "$env: $($env version-name)"
+  else
+    echo "$env: $($env version)"
+  fi
 done
