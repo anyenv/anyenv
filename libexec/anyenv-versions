@@ -11,6 +11,8 @@ for env in $(anyenv-envs); do
   echo "$env:"
   if [ "$env" = "erlenv" ]; then
     echo "$($env releases)"
+  elif [ "$env" = "tfenv" ]; then
+    echo "$($env list)"
   else
     echo "$($env versions)"
   fi
