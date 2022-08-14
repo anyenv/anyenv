@@ -12,7 +12,7 @@
 set -e
 [ -n "$ANYENV_DEBUG" ] && set -x
 
-version="1.1.4"
+version="1.1.5"
 
 if cd "$ANYENV_ROOT" 2>/dev/null; then
   git_revision="$(git describe --tags HEAD 2>/dev/null || true)"
