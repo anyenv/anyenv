@@ -2,7 +2,6 @@ name: Release Drafter
 
 on:
   push:
-    # branches to consider in the event; optional, defaults to all
     branches:
       - master
 
@@ -10,16 +9,87 @@ permissions:
   contents: read
 
 jobs:
-  update_release_draft:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+      - id: tag
+        uses: salsify/action-detect-and-tag-new-version@v2
+        with:
+          create-tag: false
+          version-command: |
+            eval $(egrep '^version=' libexec/anyenv---version) && echo "$version"
+    outputs:
+      current: ${{ steps.tag.outputs.current-version }}
+      previous: ${{ steps.tag.outputs.previous-version }}
+
+  publish_release:
+    needs:
+      - version
+    if: needs.version.outputs.current != needs.version.outputs.previous
     permissions:
-      # write permission is required to create a github release
       contents: write
-      # write permission is required for autolabeler
-      # otherwise, read permission is required at least
       pull-requests: read
     runs-on: ubuntu-latest
     steps:
-      # Drafts your next Release notes as Pull Requests are merged into "master"
-      - uses: release-drafter/release-drafter@v5
+      - id: publish
+        uses: release-drafter/release-drafter@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          publish: true
+          version: ${{ needs.version.outputs.current }}
+    outputs:
+      tag: ${{ steps.publish.outputs.tag_name }}
+
+  update_release_draft:
+    needs:
+      - version
+    if: needs.version.outputs.current == needs.version.outputs.previous
+    permissions:
+      contents: write
+      pull-requests: read
+    runs-on: ubuntu-latest
+    steps:
+      - id: draft
+        uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      tag: ${{ steps.draft.outputs.tag_name }}
+      body: ${{ steps.draft.outputs.body }}
+
+  update_release_pull_request:
+    needs:
+      - update_release_draft
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          set -xe
+          tag=${{ needs.update_release_draft.outputs.tag }}
+          version=${tag:1}
+          sed -i "s/^version=.\+$/version=\"${version}\"/" libexec/anyenv---version
+          git diff
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          branch: bump/${{ needs.update_release_draft.outputs.tag }}
+          commit_message: Release ${{ needs.update_release_draft.outputs.tag }}
+          create_branch: true
+          push_options: '--force'
+      - uses: repo-sync/pull-request@v2
+        with:
+          source_branch: bump/${{ needs.update_release_draft.outputs.tag }}
+          destination_branch: master
+          pr_title: Release ${{ needs.update_release_draft.outputs.tag }}
+          pr_body: ${{ needs.update_release_draft.outputs.body }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - run: |
+          gh pr edit --body "${{ needs.update_release_draft.outputs.body }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
