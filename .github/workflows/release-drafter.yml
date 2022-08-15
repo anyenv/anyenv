@@ -44,6 +44,20 @@ jobs:
     outputs:
       tag: ${{ steps.publish.outputs.tag_name }}
 
+  create-brew-pr:
+    needs:
+      - publish_release
+    runs-on: macos-latest
+    steps:
+      - run: |
+          set -xe
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          tag=${{ needs.publish_release.outputs.tag }}
+          brew bump-formula-pr --url https://github.com/anyenv/anyenv/archive/${tag}.tar.gz --fork-org anyenv --no-browse --force -d -v
+        env:
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+
   update_release_draft:
     needs:
       - version
