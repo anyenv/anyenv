@@ -1,0 +1,234 @@
+#!/usr/bin/env bash
+#
+# Summary: Install anyenv plugin
+#
+# Usage: anyenv install-plugin [-f|--force] [-s/--skip-existing] <plugin>
+#        anyenv install-plugin -l|--list
+#
+#   -l/--list          List all available anyenv plugins
+#   -f/--force         Install even if the plugin appears to be installed already
+#   -s/--skip-existing Skip if the plugin appears to be installed already
+#
+set -e
+[ -n "$ANYENV_DEBUG" ] && set -x
+
+if [ -z ${ANYENV_DEFINITION_ROOT+x} ]; then
+  # $XDG_CONFIG_HOME/anyenv/anyenv-install or ~/.config/anyenv/anyenv-install
+  ANYENV_DEFINITION_ROOT="${XDG_CONFIG_HOME:-${HOME}/.config}/anyenv/anyenv-install"
+fi
+
+list_plugins() {
+  if [ ! -d "${ANYENV_DEFINITION_ROOT}" ]; then
+    return
+  fi
+  if [ ! -f "${ANYENV_DEFINITION_ROOT}/plugins" ]; then
+    return
+  fi
+  cut --delim ' ' --fields 2 < "${ANYENV_DEFINITION_ROOT}/plugins" \
+    | sort
+  }
+
+install_plugin() {
+  local destination="$1"
+  local git_url="$2"
+  local git_ref="$3"
+
+  if [ -z "$destination" ] || [ -z "$git_url" ]; then
+    echoe "destination or git-url is not specified."
+    echoe "USAGE: install_plugin <destination> <git-url> [git-ref]"
+    return 1
+  fi
+
+    mkdir -p "${ANYENV_PLUGINS_ROOT}"
+    pushd "${ANYENV_PLUGINS_ROOT}" > /dev/null
+    fetch_git "${destination}" "${git_url}" "${git_ref}"
+    popd > /dev/null
+  }
+
+fetch_git() {
+  local destination="$1"
+  local git_url="$2"
+  local git_ref="${3:-master}"
+
+  echo "Cloning ${git_url} ${git_ref} to ${destination}..."
+
+  if type git &>/dev/null; then
+    git clone --branch "$git_ref" "$git_url" "$destination"
+  else
+    echoe "error: please install \`git\` and try again"
+    exit 1
+  fi
+}
+
+usage() {
+  # We can remove the sed fallback once rbenv 0.4.0 is widely available.
+  anyenv-help install-plugin 2>/dev/null || sed -ne '/^#/!q;s/.//;s/.//;1,4d;p' < "$0"
+  [ -z "$1" ] || exit "$1"
+}
+
+plugins() {
+  local query="$1"
+  list_plugins | grep -F "$query" || true
+}
+
+echoe() {
+  local message="$1"
+  (>&2 printf "\e[33m%s\e[0m\n" "${message}")
+}
+
+indent() {
+  sed 's/^/  /'
+}
+
+parse_options() {
+  OPTIONS=()
+  ARGUMENTS=()
+  local arg option index
+
+  for arg in "$@"; do
+    if [ "${arg:0:1}" = "-" ]; then
+      if [ "${arg:1:1}" = "-" ]; then
+        OPTIONS[${#OPTIONS[*]}]="${arg:2}"
+      else
+        index=1
+        while option="${arg:$index:1}"; do
+          [ -n "$option" ] || break
+          OPTIONS[${#OPTIONS[*]}]="$option"
+          index=$((index+1))
+        done
+      fi
+    else
+      ARGUMENTS[${#ARGUMENTS[*]}]="$arg"
+    fi
+  done
+}
+
+
+unset FORCE
+unset SKIP_EXISTING
+
+# Provide anyenv completions
+if [ "$1" = "--complete" ]; then
+  list_plugins
+  echo --help
+  echo --list
+  echo --force
+  echo --skip-existing
+  exit 0
+fi
+
+if [ -z "$ANYENV_ROOT" ]; then
+  ANYENV_ROOT="${HOME}/.anyenv"
+fi
+
+parse_options "$@"
+for option in "${OPTIONS[@]}"; do
+  case "$option" in
+    "h" | "help" )
+      usage 0
+      ;;
+    "l" | "list" )
+      if [ ! -d "${ANYENV_DEFINITION_ROOT}" ]; then
+        echoe "ANYENV_DEFINITION_ROOT(${ANYENV_DEFINITION_ROOT}) doesn't exist. You can initialize it by:"
+        echoe "> anyenv install --init"
+        exit 1
+      fi
+      plugins "$2" | indent
+      exit
+      ;;
+    "f" | "force" )
+      FORCE=true
+      ;;
+    "s" | "skip-existing" )
+      SKIP_EXISTING=true
+      ;;
+    * )
+      usage 1
+      ;;
+  esac
+done
+
+unset PLUGIN_NAME
+ANYENV_PLUGINS_ROOT="${ANYENV_ROOT}/plugins"
+
+# The first argument contains the plugin to install.
+# Show usage instructions if the plugin is not specified.
+PLUGIN="${ARGUMENTS[0]}"
+[ -n "$PLUGIN" ] || usage 1
+
+# Set PLUGIN_NAME from $PLUGIN, if it is not already set. Then
+# compute the installation prefix.
+[ -n "$PLUGIN_NAME" ] || PLUGIN_NAME="${PLUGIN}"
+PREFIX="${ANYENV_PLUGINS_ROOT}/${PLUGIN_NAME}"
+
+[ -d "${PREFIX}" ] && PREFIX_EXISTS=1
+
+
+if [ ! -d "${ANYENV_DEFINITION_ROOT}" ]; then
+  echoe "ANYENV_DEFINITION_ROOT(${ANYENV_DEFINITION_ROOT}) does not exist. You can initialize it by:"
+  echoe "> anyenv install --init"
+  exit 1
+fi
+PLUGINS_PATH="${ANYENV_DEFINITION_ROOT}/plugins"
+if [ ! -f "${PLUGINS_PATH}" ]; then
+  echoe "PLUGINS_PATH(${PLUGINS_PATH}) does not exist in your anyenv manifest."
+  exit 1
+fi
+
+# Plan cleanup on unsuccessful installation.
+cleanup() {
+  [ -z "${PREFIX_EXISTS}" ] && rm -rf "$PREFIX"
+}
+
+trap cleanup SIGINT
+
+STATUS=0
+
+PLUGIN_FOUND=
+PLUGIN_ROW=
+while IFS= read -r row; do
+  if [[ "$row" =~ ^install_plugin[[:space:]]${PLUGIN_NAME}[[:space:]] ]]; then
+    PLUGIN_FOUND=1
+    PLUGIN_ROW="$row"
+    break
+  fi;
+done < "${PLUGINS_PATH}"
+
+if [ -n "$PLUGIN_FOUND" ]; then
+  # If the installation prefix exists, prompt for confirmation unless
+  # the --force option was specified.
+  if [ -d "${PREFIX}/bin" ]; then
+    if [ -z "$FORCE" ] && [ -z "$SKIP_EXISTING" ]; then
+      echo "anyenv: $PREFIX already exists"
+      echo "Reinstallation removes the current installation"
+      # shellcheck disable=SC2162
+      read -p "continue with installation? (y/N) "
+      case "$REPLY" in
+        y* | Y* ) ;;
+        * ) exit 1 ;;
+      esac
+      rm -Rf "${PREFIX}"
+    elif [ -n "$SKIP_EXISTING" ]; then
+      # Since we know the plugin is already installed, and are opting to
+      # not force installation, we just `exit 0` here to
+      # leave things happy
+      exit 0
+    elif [ "$FORCE" == 'true' ]; then
+      rm -Rf "${PREFIX}"
+    fi
+  fi
+  eval "$PLUGIN_ROW" || STATUS="$?"
+else
+  echoe "Plugin $PLUGIN_NAME not found in manifest file $PLUGINS_PATH"
+  exit 1
+fi
+
+if [ "$STATUS" == "0" ]; then
+  echo ""
+  echo "Install $PLUGIN_NAME succeeded!"
+else
+  echo "Install $PLUGIN_NAME failed"
+  cleanup
+fi
+
+exit "$STATUS"
