@@ -221,7 +221,7 @@ for option in "${OPTIONS[@]}"; do
       echoe "> anyenv install --init"
       exit 1
     fi
-    definitions | indent
+    definitions "${ARGUMENTS[@]}" | indent
     exit
     ;;
   "f" | "force" )
