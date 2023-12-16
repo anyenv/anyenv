@@ -89,9 +89,9 @@ If you want, you can initialize install manifest directory with [anyenv/anyenv-i
 If you have own manifest repository, you can specify it:
 
 ```
-$ anyenv install --init https://github.com/foo/anyenv-install.git
+$ anyenv install --init https://github.com/anyenv/anyenv-install.git
 Manifest directory doesn't exist: /Users/riywo/.config/anyenv/anyenv-install
-Do you want to checkout https://github.com/foo/anyenv-install.git? [y/N]:
+Do you want to checkout https://github.com/anyenv/anyenv-install.git? [y/N]:
 ```
 
 ## Usage
